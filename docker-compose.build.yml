@@ -1,0 +1,6 @@
+builder:
+  image: python:2.7
+  command: sh -c "pip install -r requirements-frozen.txt && pyinstaller fs.spec"
+  volumes:
+    - .:/usr/src/app/
+  working_dir: /usr/src/app/
