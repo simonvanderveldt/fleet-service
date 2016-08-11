@@ -29,6 +29,12 @@ class FleetService(fleet_helper.FleetHelper):
         existing_unit_instances = self.get_unit_instances(fleet_units, service_name)
         self.logger.info('Existing instance count: ' + str(len(existing_unit_instances)))
 
+        # Destroy non-instanced unit if it exists
+        non_instanced_unit_name = service_name + '.service'
+        if any(unit['name'] == non_instanced_unit_name for unit in fleet_units):
+            self.logger.warning('Destroying non-instance unit ' + non_instanced_unit_name)
+            self.destroy_unit(non_instanced_unit_name)
+
         # Destroy old template if it exists
         if any(unit['name'] == template_unit_name for unit in fleet_units):
             self.logger.info('Destroying template ' + template_unit_name)
