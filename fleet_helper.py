@@ -22,7 +22,9 @@ class FleetHelper(object):
         self.logger.addHandler(NullHandler())
         self.fleet_uri = fleet_uri
         self.timeout = timeout
-        self.attempts = timeout/DEFAULT_SLEEP_TIME
+        self.__attempts = timeout/DEFAULT_SLEEP_TIME
+        self.fleet_units = None
+        self.fleet_systemd_states = None
 
         # Don't show chatty googleapiclient logs
         logging.getLogger('googleapiclient.discovery').setLevel(logging.WARN)
@@ -38,41 +40,38 @@ class FleetHelper(object):
         """Get a list of all units
         https://coreos.com/fleet/docs/latest/api-v1.html#list-units"""
         try:
-            fleet_units = list(self.fleet_client.list_units())
+            self.fleet_units = list(self.fleet_client.list_units())
         except fleet.APIError as error:
             self.logger.error('Unable to get unit list: ' + format(error))
             raise SystemExit
-
-        return fleet_units
 
 
     def get_systemd_states(self):
         """"Get a list of SystemD states
         https://coreos.com/fleet/docs/latest/api-v1.html#current-unit-state"""
         try:
-            systemd_states = self.fleet_client.list_unit_states()
+            self.fleet_systemd_states = self.fleet_client.list_unit_states()
         except fleet.APIError as error:
             print('Unable to get unit states: ' + format(error))
             raise SystemExit
 
-        return systemd_states
 
-
-    def get_unit_instances(self, units, service_name):
+    def get_unit_instances(self, unit_name):
         """Get a list of instances for a unit"""
         unit_instances = []
-        unit_instance_pattern = re.compile(r"^" + re.escape(service_name) + r"@(\d+)\.service")
-        for unit in units:
+        unit_instance_pattern = re.compile(r"^" + re.escape(unit_name) + r"@(\w+)\.service$")
+        for unit in self.fleet_units:
             if unit_instance_pattern.match(unit['name']):
-                unit_instances.append(unit)
+                unit_instances.append(unit.name)
 
         return unit_instances
 
 
-    def get_fleet_state(self, unit_name):
+    def get_unit_fleet_state(self, unit_name):
         """Get a unit's current state"""
         unit_state = None
-        fleet_unit = next((unit for unit in self.get_units() if unit['name'] == unit_name), None)
+        self.get_units()
+        fleet_unit = next((unit for unit in self.fleet_units if unit['name'] == unit_name), None)
 
         if fleet_unit != None:
             unit_state = fleet_unit.currentState
@@ -82,11 +81,11 @@ class FleetHelper(object):
 
 
     def wait_for_unit_state(self, unit_name, desired_state):
-        """Wait for a unit to reach a desired state, will timeout after #self.attempts"""
+        """Wait for a unit to reach a desired state, will timeout after #self.__attempts"""
         self.logger.debug('Waiting for unit ' + str(unit_name) + ' to reach state ' + str(desired_state))
         i = 0
-        while i < self.attempts:
-            unit_state = self.get_fleet_state(unit_name)
+        while i < self.__attempts:
+            unit_state = self.get_unit_fleet_state(unit_name)
 
             if unit_state == desired_state:
                 break
@@ -97,12 +96,13 @@ class FleetHelper(object):
             raise SystemExit
 
 
-    def get_systemd_state(self, unit_name):
+    def get_unit_systemd_state(self, unit_name):
         """Get unit's SystemD state
         See https://github.com/coreos/fleet/blob/master/Documentation/states.md#systemd-states
         """
         systemd_state = None
-        fleet_unit_systemd_state = next((unit for unit in self.get_systemd_states() if unit['name'] == unit_name), None)
+        self.get_systemd_states()
+        fleet_unit_systemd_state = next((unit for unit in self.fleet_systemd_states if unit['name'] == unit_name), None)
 
         if fleet_unit_systemd_state != None:
             systemd_state = fleet_unit_systemd_state['systemdActiveState']
@@ -112,11 +112,11 @@ class FleetHelper(object):
 
 
     def wait_for_unit_systemd_state(self, unit_name, desired_state):
-        """Wait for a unit to reach a desired state in SystemD, will timeout after #self.attempts"""
+        """Wait for a unit to reach a desired state in SystemD, will timeout after #self.__attempts"""
         self.logger.debug('Waiting for unit ' + str(unit_name) + ' to reach SystemD state ' + str(desired_state))
         i = 0
-        while i < self.attempts:
-            unit_systemd_state = self.get_systemd_state(unit_name)
+        while i < self.__attempts:
+            unit_systemd_state = self.get_unit_systemd_state(unit_name)
 
             if unit_systemd_state == desired_state:
                 break
@@ -136,6 +136,8 @@ class FleetHelper(object):
             self.logger.error('Unable to create new unit: ' + format(error))
             raise SystemExit
         self.wait_for_unit_state(unit_name, unit.desiredState)
+        if unit.desiredState == 'launched':
+            self.wait_for_unit_systemd_state(unit_name, 'active')
 
 
     def destroy_unit(self, unit_name):
@@ -144,20 +146,13 @@ class FleetHelper(object):
         try:
             self.fleet_client.destroy_unit(unit_name)
         except fleet.APIError as error:
-            self.logger.error('Unable to destroy old unit: ' + format(error))
+            self.logger.error('Unable to destroy old unit ' + format(error))
             raise SystemExit
         self.wait_for_unit_state(unit_name, None)
-
-
-    def create_instance(self, unit_name, unit):
-        """Create instance and verify if it is active"""
-        self.logger.info('Creating instance ' + unit_name)
-        self.create_unit(unit_name, unit)
-        self.wait_for_unit_systemd_state(unit_name, 'active')
-
-
-    def destroy_instance(self, unit_name):
-        """Destroy instance and verify that it no longer exists"""
-        self.logger.info('Destroying instance ' + unit_name)
-        self.destroy_unit(unit_name)
         self.wait_for_unit_systemd_state(unit_name, None)
+
+
+    def destroy_and_create_unit(self, unit_name, unit):
+        """Do a verified destroy and then a verified create of a unit"""
+        self.destroy_unit(unit_name)
+        self.create_unit(unit_name, unit)
