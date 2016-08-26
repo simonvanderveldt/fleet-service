@@ -26,7 +26,7 @@ fs --help
 ## How to develop
 ```
 # Create a virtualenv with python 2.7
- virtualenv -p python2.7 .venv
+virtualenv -p python2.7 .venv
 # Activate the virtualenv
 source .venv/bin/activate
 # Install the dependencies
