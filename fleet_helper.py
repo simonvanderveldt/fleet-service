@@ -59,7 +59,7 @@ class FleetHelper(object):
     def get_unit_instances(self, unit_name):
         """Get a list of instances for a unit"""
         unit_instances = []
-        unit_instance_pattern = re.compile(r"^" + re.escape(unit_name) + r"@(\w+)\.service$")
+        unit_instance_pattern = re.compile(r"^" + re.escape(unit_name) + r"@[a-zA-Z0-9:_.-]+\.service$")
         for unit in self.fleet_units:
             if unit_instance_pattern.match(unit['name']):
                 unit_instances.append(unit.name)
