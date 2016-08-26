@@ -21,11 +21,14 @@ class FleetService(fleet_helper.FleetHelper):
         self.wrong_instance_units = []
 
 
-    def create_service(self, service_name, unit_file, count=3):
+    def create_service(self, service_name, unit_file, count=3, restart=None):
         """Create a service"""
         template_unit_name = service_name + '@.service'
         template_unit = fleet.Unit(from_file=unit_file, desired_state='inactive')
         instance_unit = fleet.Unit(from_file=unit_file, desired_state='launched')
+        if restart:
+            self.set_restart_strategy(template_unit, restart)
+            self.set_restart_strategy(instance_unit, restart)
 
         self.logger.info('Creating service ' + service_name)
         self.logger.info('Desired instance count: ' + str(count))
@@ -106,3 +109,11 @@ class FleetService(fleet_helper.FleetHelper):
 
         self.logger.debug(instances)
         return sorted(instances.items())
+
+
+    def set_restart_strategy(self, unit, restart):
+        """Set restart strategy for unit
+        Will override any setting in the give unit
+        """
+        unit.remove_option('Service', 'Restart')
+        unit.add_option('Service', 'Restart', restart)
