@@ -104,8 +104,7 @@ class FleetService(fleet_helper.FleetHelper):
             for unit_state in self.fleet_client.list_unit_states():
                 instances.setdefault(unit_state.name, []).append({'machineID':unit_state.machineID,'state':unit_state.systemdSubState})
         except fleet.APIError as exc:
-            self.logger.error('Unable to list units: ' + str(exc))
-            raise SystemExit
+            raise SystemExit('Unable to list units: ' + str(exc))
 
         self.logger.debug(instances)
         return sorted(instances.items())
