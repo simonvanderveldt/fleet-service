@@ -32,8 +32,7 @@ class FleetHelper(object):
         try:
             self.fleet_client = fleet.Client(fleet_uri)
         except ValueError as error:
-            self.logger.error('Unable to discover fleet: ' + format(error))
-            raise SystemExit
+            raise SystemExit('Unable to discover fleet: ' + format(error))
 
 
     def get_units(self):
@@ -42,8 +41,7 @@ class FleetHelper(object):
         try:
             self.fleet_units = list(self.fleet_client.list_units())
         except fleet.APIError as error:
-            self.logger.error('Unable to get unit list: ' + format(error))
-            raise SystemExit
+            raise SystemExit('Unable to get unit list: ' + format(error))
 
 
     def get_systemd_states(self):
@@ -52,8 +50,7 @@ class FleetHelper(object):
         try:
             self.fleet_systemd_states = self.fleet_client.list_unit_states()
         except fleet.APIError as error:
-            print('Unable to get unit states: ' + format(error))
-            raise SystemExit
+            raise SystemExit('Unable to get unit states: ' + format(error))
 
 
     def get_unit_instances(self, unit_name):
@@ -92,8 +89,7 @@ class FleetHelper(object):
             time.sleep(DEFAULT_SLEEP_TIME)
             i = i + 1
         else:
-            self.logger.error('ERROR: Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
-            raise SystemExit
+            raise SystemExit('Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
 
 
     def get_unit_systemd_state(self, unit_name):
@@ -123,8 +119,7 @@ class FleetHelper(object):
             time.sleep(DEFAULT_SLEEP_TIME)
             i = i + 1
         else:
-            self.logger.error('ERROR: Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
-            raise SystemExit
+            raise SystemExit('Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
 
 
     def create_unit(self, unit_name, unit):
@@ -133,8 +128,7 @@ class FleetHelper(object):
         try:
             self.fleet_client.create_unit(unit_name, unit)
         except fleet.APIError as error:
-            self.logger.error('Unable to create new unit: ' + format(error))
-            raise SystemExit
+            raise SystemExit('Unable to create unit: ' + format(error))
         self.wait_for_unit_state(unit_name, unit.desiredState)
         if unit.desiredState == 'launched':
             self.wait_for_unit_systemd_state(unit_name, 'active')
@@ -146,8 +140,7 @@ class FleetHelper(object):
         try:
             self.fleet_client.destroy_unit(unit_name)
         except fleet.APIError as error:
-            self.logger.error('Unable to destroy old unit ' + format(error))
-            raise SystemExit
+            raise SystemExit('Unable to destroy unit ' + format(error))
         self.wait_for_unit_state(unit_name, None)
         self.wait_for_unit_systemd_state(unit_name, None)
 
