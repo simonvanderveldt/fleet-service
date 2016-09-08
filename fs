@@ -24,11 +24,10 @@ def cli(ctx, fleetctl_endpoint, timeout):
 @click.argument('service-name', type=str)
 @click.argument('unit-file', type=click.Path(exists=True))
 @click.option('--count', type=int, default=3)
-@click.option('--restart', type=click.Choice(['always', 'no']), default=None, help='Overrides the Restart parameter of the unit')
 @click.pass_obj
-def create(ctx, service_name, unit_file, count, restart):
+def create(ctx, service_name, unit_file, count):
     """Start a service"""
-    ctx.create_service(service_name, unit_file, count, restart)
+    ctx.create_service(service_name, unit_file, count)
 
 
 @cli.command()
