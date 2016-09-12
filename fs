@@ -40,11 +40,10 @@ def restart(ctx, service_name):
 
 @cli.command()
 @click.argument('service-name', type=str)
-@click.argument('stage', type=str)
 @click.pass_obj
-def destroy(ctx, service_name, stage):
+def destroy(ctx, service_name):
     """Destroy a service"""
-    logger.info("Not implemented yet ;)")
+    ctx.destroy_service(service_name)
 
 
 @cli.command()
