@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='fleet-service',
-    version='0.0.3',
+    version='0.0.4',
     url='http://github.com/simonvanderveldt/fleet-service',
     author='Simon van der Veldt',
     packages=[],
