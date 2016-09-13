@@ -33,14 +33,6 @@ def create(ctx, service_name, unit_file, count):
 @cli.command()
 @click.argument('service-name', type=str)
 @click.pass_obj
-def restart(ctx, service_name):
-    """Restart a service without downtime"""
-    logger.info("Not implemented yet ;)")
-
-
-@cli.command()
-@click.argument('service-name', type=str)
-@click.pass_obj
 def destroy(ctx, service_name):
     """Destroy a service"""
     ctx.destroy_service(service_name)
