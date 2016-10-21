@@ -34,7 +34,6 @@ class FleetHelper(object):
         except ValueError as error:
             raise SystemExit('Unable to discover fleet: ' + format(error))
 
-
     def get_units(self):
         """Get a list of all units
         https://coreos.com/fleet/docs/latest/api-v1.html#list-units"""
@@ -43,7 +42,6 @@ class FleetHelper(object):
         except fleet.APIError as error:
             raise SystemExit('Unable to get unit list: ' + format(error))
 
-
     def get_systemd_states(self):
         """"Get a list of SystemD states
         https://coreos.com/fleet/docs/latest/api-v1.html#current-unit-state"""
@@ -51,7 +49,6 @@ class FleetHelper(object):
             self.fleet_systemd_states = self.fleet_client.list_unit_states()
         except fleet.APIError as error:
             raise SystemExit('Unable to get unit states: ' + format(error))
-
 
     def get_unit_instances(self, unit_name):
         """Get a list of instances for a unit"""
@@ -62,7 +59,6 @@ class FleetHelper(object):
                 unit_instances.append(unit.name)
 
         return unit_instances
-
 
     def get_unit_fleet_state(self, unit_name):
         """Get a unit's current state"""
@@ -75,7 +71,6 @@ class FleetHelper(object):
 
         self.logger.debug(str(unit_name) + ' state: ' + str(unit_state))
         return unit_state
-
 
     def wait_for_unit_fleet_state(self, unit_name, desired_state):
         """Wait for a unit to reach a desired state, will timeout after #self.__attempts"""
@@ -91,7 +86,6 @@ class FleetHelper(object):
         else:
             raise SystemExit('Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
 
-
     def get_unit_systemd_state(self, unit_name):
         """Get unit's SystemD state
         See https://github.com/coreos/fleet/blob/master/Documentation/states.md#systemd-states
@@ -105,7 +99,6 @@ class FleetHelper(object):
 
         self.logger.debug(unit_name + ' SystemD state: ' + str(systemd_state))
         return systemd_state
-
 
     def wait_for_unit_systemd_state(self, unit_name, desired_state):
         """Wait for a unit to reach a desired state in SystemD, will timeout after #self.__attempts"""
@@ -121,7 +114,6 @@ class FleetHelper(object):
         else:
             raise SystemExit('Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
 
-
     def create_unit(self, unit_name, unit):
         """Submit a new unit"""
         self.logger.debug('Creating new unit: ' + unit_name + ' with desired state ' + unit.desiredState)
@@ -133,7 +125,6 @@ class FleetHelper(object):
         if unit.desiredState == 'launched':
             self.wait_for_unit_systemd_state(unit_name, 'active')
 
-
     def destroy_unit(self, unit_name):
         """Destroy a unit"""
         self.logger.debug('Destroying unit: ' + unit_name)
@@ -143,7 +134,6 @@ class FleetHelper(object):
             raise SystemExit('Unable to destroy unit ' + format(error))
         self.wait_for_unit_fleet_state(unit_name, None)
         self.wait_for_unit_systemd_state(unit_name, None)
-
 
     def destroy_and_create_unit(self, unit_name, unit):
         """Do a verified destroy and then a verified create of a unit"""
