@@ -94,7 +94,7 @@ class FleetHelper(object):
         self.get_systemd_states()
         fleet_unit_systemd_state = next((unit for unit in self.fleet_systemd_states if unit['name'] == unit_name), None)
 
-        if fleet_unit_systemd_state != None:
+        if fleet_unit_systemd_state is not None and 'systemdActiveState' in fleet_unit_systemd_state:
             systemd_state = fleet_unit_systemd_state['systemdActiveState']
 
         self.logger.debug(unit_name + ' SystemD state: ' + str(systemd_state))
