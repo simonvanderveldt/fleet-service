@@ -66,8 +66,8 @@ class FleetHelper(object):
         self.get_units()
         fleet_unit = next((unit for unit in self.fleet_units if unit['name'] == unit_name), None)
 
-        if fleet_unit != None:
-            unit_state = fleet_unit.currentState
+        if fleet_unit is not None and 'currentState' in fleet_unit:
+            unit_state = fleet_unit['currentState']
 
         self.logger.debug(str(unit_name) + ' state: ' + str(unit_state))
         return unit_state
