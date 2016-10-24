@@ -20,7 +20,6 @@ class FleetService(fleet_helper.FleetHelper):
         self.our_existing_service_instances = []
         self.wrong_instance_units = []
 
-
     def create_service(self, service_name, unit_file, count=3):
         """Create a service"""
         template_unit_name = service_name + '@.service'
@@ -93,7 +92,6 @@ class FleetService(fleet_helper.FleetHelper):
         for instance in instances_to_destroy:
             self.destroy_unit(instance)
 
-
     def destroy_service(self, service_name):
         """Destroy a service"""
         template_unit_name = service_name + '@.service'
@@ -137,7 +135,6 @@ class FleetService(fleet_helper.FleetHelper):
             self.logger.info('Destroying instances: ' + str(self.our_existing_service_instances))
         for instance in sorted(self.our_existing_service_instances, reverse=True):
             self.destroy_unit(instance)
-
 
     def ps(self):
         """Return service state"""
