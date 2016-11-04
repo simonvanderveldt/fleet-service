@@ -18,7 +18,7 @@ Library and command line tool to enable service based zero-downtime deployment s
 
 ## How to use
 ```
-pip install fleet-service
+# Download the binary and run it :)
 fs --help
 ```
 
