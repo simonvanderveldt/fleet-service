@@ -4,6 +4,8 @@ import click
 import logging
 import click_log
 import fleet_service
+from tabulate import tabulate
+from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,20 @@ def ls(ctx):
     services = ctx.list_services()
     for key, value in services:
         print(key + ": " + str(len(value)))
+
+
+@cli.command()
+@click.pass_obj
+def lm(ctx):
+    """Show all machines"""
+    machines = ctx.list_machines()
+    machines_table = []
+    for machine in machines:
+        machine_id_short = machine['id'][:8] + '...'
+        machine_units = len(machine['units'])
+        machine_metadata = ','.join("%s=%s" % (key, str(val)) for (key, val) in machine['metadata'].iteritems())
+        machines_table.append(OrderedDict([['ID', machine_id_short], ['IP', machine['ip']], ['UNITS', machine_units], ['METADATA', machine_metadata]]))
+    print tabulate(machines_table, headers="keys", tablefmt="plain")
 
 if __name__ == "__main__":
     cli()

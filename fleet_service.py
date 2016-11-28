@@ -137,7 +137,7 @@ class FleetService(fleet_helper.FleetHelper):
             self.destroy_unit(instance)
 
     def list_services(self):
-        """Return service state"""
+        """Return info for all services"""
         instances = {}
         try:
             for unit_state in self.fleet_client.list_unit_states():
@@ -147,3 +147,29 @@ class FleetService(fleet_helper.FleetHelper):
 
         self.logger.debug(instances)
         return sorted(instances.items())
+
+    def list_machines(self):
+        """Return info for all machines"""
+        try:
+            fleet_units = list(self.fleet_client.list_unit_states())
+        except fleet.APIError as exc:
+            raise SystemExit('Unable to list units: ' + str(exc))
+        self.logger.debug(fleet_units)
+
+        try:
+            fleet_machines = list(self.fleet_client.list_machines())
+        except fleet.APIError as exc:
+            raise SystemExit('Unable to list machines: ' + str(exc))
+        self.logger.debug(fleet_machines)
+
+        machines = []
+        for machine in fleet_machines:
+            machine_units = []
+            for unit in fleet_units:
+                if unit['machineID'] == machine.id:
+                    machine_units.append(unit.as_dict())
+            machines.append({'id': machine.id, 'ip': machine.primaryIP, 'units': machine_units, 'metadata': machine.metadata})
+
+        self.logger.debug(machines)
+        return machines
+
