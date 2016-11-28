@@ -40,12 +40,11 @@ def destroy(ctx, service_name):
 
 @cli.command()
 @click.pass_obj
-def ps(ctx):
-    """Show status of all services"""
-    services = ctx.ps()
+def ls(ctx):
+    """List all services"""
+    services = ctx.list_services()
     for key, value in services:
         print(key + ": " + str(len(value)))
-
 
 if __name__ == "__main__":
     cli()

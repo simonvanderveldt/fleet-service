@@ -136,14 +136,14 @@ class FleetService(fleet_helper.FleetHelper):
         for instance in sorted(self.our_existing_service_instances, reverse=True):
             self.destroy_unit(instance)
 
-    def ps(self):
+    def list_services(self):
         """Return service state"""
         instances = {}
         try:
             for unit_state in self.fleet_client.list_unit_states():
-                instances.setdefault(unit_state.name, []).append({'machineID':unit_state.machineID,'state':unit_state.systemdSubState})
+                instances.setdefault(unit_state.name, []).append({'machineID': unit_state.machineID,'state': unit_state.systemdSubState})
         except fleet.APIError as exc:
-            raise SystemExit('Unable to list units: ' + str(exc))
+            raise SystemExit('Unable to list unit states: ' + str(exc))
 
         self.logger.debug(instances)
         return sorted(instances.items())
