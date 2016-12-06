@@ -45,8 +45,11 @@ def destroy(ctx, service_name):
 def ls(ctx):
     """List all services"""
     services = ctx.list_services()
-    for key, value in services:
-        print(key + ": " + str(len(value)))
+    services_table = []
+    for service_name, service_instances in sorted(services.iteritems()):
+        service_instance_count = len(service_instances)
+        services_table.append(OrderedDict([['NAME', service_name], ['INSTANCES', service_instance_count]]))
+    click.echo(tabulate(services_table, headers="keys", tablefmt="plain"))
 
 
 @cli.command()
@@ -60,7 +63,7 @@ def lm(ctx):
         machine_units = len(machine['units'])
         machine_metadata = ','.join("%s=%s" % (key, str(val)) for (key, val) in machine['metadata'].iteritems())
         machines_table.append(OrderedDict([['ID', machine_id_short], ['IP', machine['ip']], ['UNITS', machine_units], ['METADATA', machine_metadata]]))
-    print tabulate(machines_table, headers="keys", tablefmt="plain")
+    click.echo(tabulate(machines_table, headers="keys", tablefmt="plain"))
 
 if __name__ == "__main__":
     cli()
