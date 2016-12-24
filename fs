@@ -78,9 +78,14 @@ def lm(ctx):
     machines_table = []
     for machine in machines:
         machine_id_short = machine['id'][:8] + '...'
-        machine_units = len(machine['units'])
+        machine_unit_count = len(machine['units'])
         machine_metadata = ','.join("%s=%s" % (key, str(val)) for (key, val) in machine['metadata'].iteritems())
-        machines_table.append(OrderedDict([['ID', machine_id_short], ['IP', machine['ip']], ['UNITS', machine_units], ['METADATA', machine_metadata]]))
+        machines_table.append(OrderedDict([
+            ['ID', machine_id_short],
+            ['IP', machine['ip']],
+            ['UNITS', machine_unit_count],
+            ['METADATA', machine_metadata]
+        ]))
     click.echo(tabulate(machines_table, headers="keys", tablefmt="plain"))
 
 if __name__ == "__main__":
