@@ -143,6 +143,7 @@ class FleetService(fleet_helper.FleetHelper):
         service_name_search = re.search(service_name_pattern, unit_name)
         if service_name_search:
             service_name = service_name_search.group(1)
+
         return service_name
 
     def list_services(self):
@@ -170,13 +171,13 @@ class FleetService(fleet_helper.FleetHelper):
             fleet_units = list(self.fleet_client.list_unit_states())
         except fleet.APIError as exc:
             raise SystemExit('Unable to list units: ' + str(exc))
-        self.logger.debug(fleet_units)
+        self.logger.debug('Fleet units: ' + str(fleet_units))
 
         try:
             fleet_machines = list(self.fleet_client.list_machines())
         except fleet.APIError as exc:
             raise SystemExit('Unable to list machines: ' + str(exc))
-        self.logger.debug(fleet_machines)
+        self.logger.debug('Fleet machines: ' + str(fleet_machines))
 
         machines = []
         for machine in fleet_machines:
@@ -185,6 +186,6 @@ class FleetService(fleet_helper.FleetHelper):
                 if unit['machineID'] == machine.id:
                     machine_units.append(unit.as_dict())
             machines.append({'id': machine.id, 'ip': machine.primaryIP, 'units': machine_units, 'metadata': machine.metadata})
+        self.logger.debug('Fleet machines and their units: ' + str(machines))
 
-        self.logger.debug(machines)
         return machines
