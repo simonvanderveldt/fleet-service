@@ -45,8 +45,29 @@ def destroy(ctx, service_name):
 def ls(ctx):
     """List all services"""
     services = ctx.list_services()
-    for key, value in services:
-        print(key + ": " + str(len(value)))
+    services_table = []
+    for service_name, service_instances in sorted(services.iteritems()):
+        # States from https://github.com/systemd/systemd/blob/493fd52f1ada36bfe63301d4bb50f7fd2b38c670/src/basic/unit-name.c#L867
+        service_systemd_active_states = {
+            'active': 0,
+            'failed': 0,
+            'inactive': 0,
+            'activating': 0,
+            'deactivating': 0,
+            'reloading': 0
+        }
+        for service_instance in service_instances:
+            service_systemd_active_states[service_instance['systemdActiveState']] += 1
+        services_table.append(OrderedDict([
+            ['NAME', service_name],
+            ['ACTIVE', service_systemd_active_states['active']],
+            ['FAILED', service_systemd_active_states['failed']],
+            ['INACTIVE', service_systemd_active_states['inactive']],
+            ['ACTIVATING', service_systemd_active_states['activating']],
+            ['DEACTIVATING', service_systemd_active_states['deactivating']],
+            ['RELOADING', service_systemd_active_states['reloading']]
+        ]))
+    click.echo(tabulate(services_table, headers="keys", tablefmt="plain"))
 
 
 @cli.command()
@@ -57,10 +78,15 @@ def lm(ctx):
     machines_table = []
     for machine in machines:
         machine_id_short = machine['id'][:8] + '...'
-        machine_units = len(machine['units'])
+        machine_unit_count = len(machine['units'])
         machine_metadata = ','.join("%s=%s" % (key, str(val)) for (key, val) in machine['metadata'].iteritems())
-        machines_table.append(OrderedDict([['ID', machine_id_short], ['IP', machine['ip']], ['UNITS', machine_units], ['METADATA', machine_metadata]]))
-    print tabulate(machines_table, headers="keys", tablefmt="plain")
+        machines_table.append(OrderedDict([
+            ['ID', machine_id_short],
+            ['IP', machine['ip']],
+            ['UNITS', machine_unit_count],
+            ['METADATA', machine_metadata]
+        ]))
+    click.echo(tabulate(machines_table, headers="keys", tablefmt="plain"))
 
 if __name__ == "__main__":
     cli()

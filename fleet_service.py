@@ -2,6 +2,7 @@ import re
 import fleet.v1 as fleet
 import fleet_helper
 from pkg_resources import get_distribution, DistributionNotFound
+from collections import defaultdict
 
 
 __version__ = None  # required for initial installation
@@ -136,17 +137,33 @@ class FleetService(fleet_helper.FleetHelper):
         for instance in sorted(self.our_existing_service_instances, reverse=True):
             self.destroy_unit(instance)
 
+    def get_service_name_from_unit_name(self, unit_name):
+        service_name = None
+        service_name_pattern = re.compile(r"^([a-zA-Z0-9:_.@-]+)@\d+.service$")
+        service_name_search = re.search(service_name_pattern, unit_name)
+        if service_name_search:
+            service_name = service_name_search.group(1)
+
+        return service_name
+
     def list_services(self):
         """Return info for all services"""
-        instances = {}
+        fleet_unit_states = []
         try:
-            for unit_state in self.fleet_client.list_unit_states():
-                instances.setdefault(unit_state.name, []).append({'machineID': unit_state.machineID,'state': unit_state.systemdSubState})
+            for unit in self.fleet_client.list_unit_states():
+                fleet_unit_states.append(unit.as_dict())
         except fleet.APIError as exc:
             raise SystemExit('Unable to list unit states: ' + str(exc))
+        self.logger.debug('Fleet unit states: ' + str(fleet_unit_states))
 
-        self.logger.debug(instances)
-        return sorted(instances.items())
+        services = defaultdict(list)
+        for unit in fleet_unit_states:
+            service_name = self.get_service_name_from_unit_name(unit['name'])
+            if service_name:
+                services[service_name].append(unit)
+        self.logger.debug('Fleet services: ' + str(services.items()))
+
+        return services
 
     def list_machines(self):
         """Return info for all machines"""
@@ -154,13 +171,13 @@ class FleetService(fleet_helper.FleetHelper):
             fleet_units = list(self.fleet_client.list_unit_states())
         except fleet.APIError as exc:
             raise SystemExit('Unable to list units: ' + str(exc))
-        self.logger.debug(fleet_units)
+        self.logger.debug('Fleet units: ' + str(fleet_units))
 
         try:
             fleet_machines = list(self.fleet_client.list_machines())
         except fleet.APIError as exc:
             raise SystemExit('Unable to list machines: ' + str(exc))
-        self.logger.debug(fleet_machines)
+        self.logger.debug('Fleet machines: ' + str(fleet_machines))
 
         machines = []
         for machine in fleet_machines:
@@ -169,7 +186,6 @@ class FleetService(fleet_helper.FleetHelper):
                 if unit['machineID'] == machine.id:
                     machine_units.append(unit.as_dict())
             machines.append({'id': machine.id, 'ip': machine.primaryIP, 'units': machine_units, 'metadata': machine.metadata})
+        self.logger.debug('Fleet machines and their units: ' + str(machines))
 
-        self.logger.debug(machines)
         return machines
-
