@@ -4,13 +4,23 @@ import re
 import fleet.v1 as fleet
 from pkg_resources import get_distribution, DistributionNotFound
 from collections import defaultdict
-from fleet_helper import FleetHelper
+from fleet_helper import FleetHelper, get_unit_instances
 
 __version__ = None  # required for initial installation
 try:
     __version__ = get_distribution('fleet-service').version
 except DistributionNotFound:
     __version__ = 'Please install this project with setup.py'
+
+
+def get_service_name_from_unit_name(unit_name):
+    service_name = None
+    service_name_pattern = re.compile(r"^([a-zA-Z0-9:_.@-]+)@\d+.service$")
+    service_name_search = re.search(service_name_pattern, unit_name)
+    if service_name_search:
+        service_name = service_name_search.group(1)
+
+    return service_name
 
 
 class FleetService(object):
@@ -46,7 +56,7 @@ class FleetService(object):
         existing_units = self.fleet_client.get_fleet_units()
 
         # Get existing instances of this service
-        existing_service_instances = sorted(self.fleet_client.get_unit_instances(existing_units, service_name))
+        existing_service_instances = sorted(get_unit_instances(existing_units, service_name))
         self.logger.debug('Existing instances: ' + str(existing_service_instances))
 
         # Get existing instances we manage
@@ -119,7 +129,7 @@ class FleetService(object):
         existing_units = self.fleet_client.get_fleet_units()
 
         # Get existing instances of this service
-        existing_service_instances = sorted(self.fleet_client.get_unit_instances(existing_units, service_name))
+        existing_service_instances = sorted(get_unit_instances(existing_units, service_name))
         if not existing_service_instances:
             self.logger.info('There are no instances for this service, exiting')
             raise SystemExit()
@@ -159,15 +169,6 @@ class FleetService(object):
         self.logger.info('Destroying service ' + service_name + ' done')
         return True
 
-    def get_service_name_from_unit_name(self, unit_name):
-        service_name = None
-        service_name_pattern = re.compile(r"^([a-zA-Z0-9:_.@-]+)@\d+.service$")
-        service_name_search = re.search(service_name_pattern, unit_name)
-        if service_name_search:
-            service_name = service_name_search.group(1)
-
-        return service_name
-
     def list_services(self):
         """Return info for all services"""
         fleet_unit_states = []
@@ -180,7 +181,7 @@ class FleetService(object):
 
         services = defaultdict(list)
         for unit in fleet_unit_states:
-            service_name = self.get_service_name_from_unit_name(unit['name'])
+            service_name = get_service_name_from_unit_name(unit['name'])
             if service_name:
                 services[service_name].append(unit)
         self.logger.debug('Fleet services: ' + str(services.items()))

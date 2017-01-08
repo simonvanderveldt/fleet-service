@@ -15,6 +15,17 @@ except DistributionNotFound:
 DEFAULT_SLEEP_TIME = 0.5
 
 
+def get_unit_instances(units, unit_name):
+    """Get a list of instances for a unit"""
+    unit_instances = []
+    unit_instance_pattern = re.compile(r"^" + re.escape(unit_name) + r"@[a-zA-Z0-9:_.-]+\.service$")
+    for unit in units:
+        if unit_instance_pattern.match(unit['name']):
+            unit_instances.append(unit.name)
+
+    return unit_instances
+
+
 class FleetHelper(fleet.Client):
     """Exposes convenience functions wrapping python-fleet"""
     def __init__(self, fleet_uri='http+unix://%2Fvar%2Frun%2Ffleet.sock', timeout=600):
@@ -43,16 +54,6 @@ class FleetHelper(fleet.Client):
             return self.list_unit_states()
         except fleet.APIError as error:
             raise SystemExit('Unable to get unit states: ' + format(error))
-
-    def get_unit_instances(self, units, unit_name):
-        """Get a list of instances for a unit"""
-        unit_instances = []
-        unit_instance_pattern = re.compile(r"^" + re.escape(unit_name) + r"@[a-zA-Z0-9:_.-]+\.service$")
-        for unit in units:
-            if unit_instance_pattern.match(unit['name']):
-                unit_instances.append(unit.name)
-
-        return unit_instances
 
     def get_fleet_unit_state(self, unit_name):
         """Get a unit's current state"""
