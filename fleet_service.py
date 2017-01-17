@@ -68,23 +68,23 @@ class FleetService(object):
         non_instanced_unit_name = service_name + '.service'
         if any(unit['name'] == non_instanced_unit_name for unit in existing_units):
             self.logger.warning('Destroying non-instance unit ' + non_instanced_unit_name)
-            self.fleet_client.destroy_unit_and_wait_for(non_instanced_unit_name)
+            self.fleet_client.wait_for_destroy_unit(non_instanced_unit_name)
 
         # Destroy instances we don't manage
         wrong_instance_units = sorted(set(existing_service_instances) - set(our_existing_service_instances))
         if len(wrong_instance_units) > 0:
             self.logger.warning('Destroying instances not created by us: ' + str(wrong_instance_units))
         for unit in wrong_instance_units:
-            self.fleet_client.destroy_unit_and_wait_for(unit)
+            self.fleet_client.wait_for_destroy_unit(unit)
 
         # Update/create template
         if any(unit['name'] == template_unit_name for unit in existing_units):
             self.logger.info('Updating template ' + template_unit_name)
-            if self.fleet_client.destroy_and_create_unit(template_unit_name, template_unit):
+            if self.fleet_client.wait_for_destroy_and_create_unit(template_unit_name, template_unit):
                 self.logger.info('Updating template ' + template_unit_name + ' done')
         else:
             self.logger.info('Creating template ' + template_unit_name)
-            if self.fleet_client.create_unit_and_wait_for(template_unit_name, template_unit):
+            if self.fleet_client.wait_for_create_unit(template_unit_name, template_unit):
                 self.logger.info('Creating template ' + template_unit_name + ' done')
 
         # Create new instances that don't exist yet
@@ -94,7 +94,7 @@ class FleetService(object):
             self.logger.debug('New instances to create: ' + str(instances_to_create))
         for instance in instances_to_create:
             self.logger.info('Creating instance ' + instance)
-            if self.fleet_client.create_unit_and_wait_for(instance, instance_unit):
+            if self.fleet_client.wait_for_create_unit(instance, instance_unit):
                 self.logger.info('Creating instance ' + instance + ' done')
 
         # Update instances that already exist
@@ -104,7 +104,7 @@ class FleetService(object):
             self.logger.debug('Instances to update: ' + str(instances_to_update))
         for instance in instances_to_update:
             self.logger.info('Updating instance ' + instance)
-            if self.fleet_client.destroy_and_create_unit(instance, instance_unit):
+            if self.fleet_client.wait_for_destroy_and_create_unit(instance, instance_unit):
                 self.logger.info('Updating instance ' + instance + ' done')
 
         # Destroy existing instances that should no longer exist
@@ -114,7 +114,7 @@ class FleetService(object):
             self.logger.debug('Destroying existing instances: ' + str(instances_to_destroy))
         for instance in instances_to_destroy:
             self.logger.info('Destroying instance ' + instance)
-            if self.fleet_client.destroy_unit_and_wait_for(instance):
+            if self.fleet_client.wait_for_destroy_unit(instance):
                 self.logger.info('Destroying instance ' + instance + ' done')
 
         self.logger.info('Creating service ' + service_name + ' with ' + str(count) + ' instances done')
@@ -144,26 +144,26 @@ class FleetService(object):
         non_instanced_unit_name = service_name + '.service'
         if any(unit['name'] == non_instanced_unit_name for unit in existing_units):
             self.logger.warning('Destroying non-instance unit ' + non_instanced_unit_name)
-            self.fleet_client.destroy_unit_and_wait_for(non_instanced_unit_name)
+            self.fleet_client.wait_for_destroy_unit(non_instanced_unit_name)
 
         # Destroy instances we don't manage
         wrong_instance_units = sorted(set(existing_service_instances) - set(our_existing_service_instances))
         if len(wrong_instance_units) > 0:
             self.logger.warning('Destroying instances not created by us: ' + str(wrong_instance_units))
         for unit in wrong_instance_units:
-            self.fleet_client.destroy_unit_and_wait_for(unit)
+            self.fleet_client.wait_for_destroy_unit(unit)
 
         # Destroy old template if it exists
         if any(unit['name'] == template_unit_name for unit in existing_units):
             self.logger.info('Destroying template ' + template_unit_name)
-            self.fleet_client.destroy_unit_and_wait_for(template_unit_name)
+            self.fleet_client.wait_for_destroy_unit(template_unit_name)
 
         # Destroy instances we manage
         if len(our_existing_service_instances) > 0:
             self.logger.debug('Destroying instances: ' + str(our_existing_service_instances))
         for instance in sorted(our_existing_service_instances, reverse=True):
             self.logger.info('Destroying instance ' + instance)
-            if self.fleet_client.destroy_unit_and_wait_for(instance):
+            if self.fleet_client.wait_for_destroy_unit(instance):
                 self.logger.info('Destroying instance ' + instance + ' done')
 
         self.logger.info('Destroying service ' + service_name + ' done')

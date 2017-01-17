@@ -109,7 +109,7 @@ class FleetHelper(fleet.Client):
         else:
             raise SystemExit('Timed out waiting for unit ' + unit_name + ' to reach state ' + str(desired_state))
 
-    def create_unit_and_wait_for(self, unit_name, unit):
+    def wait_for_create_unit(self, unit_name, unit):
         """Submit a new unit"""
         self.logger.debug('Creating new unit ' + unit_name + ' with desired state ' + unit.desiredState)
         try:
@@ -121,7 +121,7 @@ class FleetHelper(fleet.Client):
             self.wait_for_systemd_unit_state(unit_name, 'active')
         return True
 
-    def destroy_unit_and_wait_for(self, unit_name):
+    def wait_for_destroy_unit(self, unit_name):
         """Destroy a unit"""
         self.logger.debug('Destroying unit ' + unit_name)
         try:
@@ -132,8 +132,8 @@ class FleetHelper(fleet.Client):
         self.wait_for_systemd_unit_state(unit_name, None)
         return True
 
-    def destroy_and_create_unit(self, unit_name, unit):
+    def wait_for_destroy_and_create_unit(self, unit_name, unit):
         """Do a verified destroy and then a verified create of a unit"""
-        self.destroy_unit_and_wait_for(unit_name)
-        self.create_unit_and_wait_for(unit_name, unit)
+        self.wait_for_destroy_unit(unit_name)
+        self.wait_for_create_unit(unit_name, unit)
         return True
